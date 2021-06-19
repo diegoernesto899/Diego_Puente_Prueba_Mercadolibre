@@ -1,46 +1,39 @@
-//<Author> Diego Ernesto Puentes Matta</Author>
-//Prueba técnica Examen Mercadolibre
 package main
 
+//<Author> Diego Ernesto Puentes Matta</Author>
+//Prueba técnica Examen Mercadolibre
 import (
-	"fmt"
-	"io/ioutil"
+	"encoding/json"
+	D "github.com/diegoernesto899/Diego_Puentes_Prueba_Mercadolibre/Data"
+	L "github.com/diegoernesto899/Diego_Puentes_Prueba_Mercadolibre/pkg"
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
-
-	"github.com/gorilla/mux"
 )
 
-var dna string
-
-// type Post struct {
-// 	ID string `json:"id"`
-// 	Title string `json:"title"`
-// 	Body string `json:"body"`
-//   }
+type jsonStruct struct {
+	Test [6]string `json:"dna"`
+}
 
 func mutant(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "POST" {
-		body, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, "Error reading request body",
-				http.StatusInternalServerError)
-		}
-		dna = string(body)
-		fmt.Println(dna)
-	} else {
-		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+	D.TestCon()
+	decoder := json.NewDecoder(r.Body) //Obtener json param dna form r request
+	var t jsonStruct
+	err := decoder.Decode(&t) //mapear el parametro adn  al objeto jsonStruct
+	if err != nil {
+		panic(err)
 	}
-	var response = true
-	// dna := [6]string{"ATGCwA", "CAGTGC", "TTATGT", "AGAAGG", "CCCCTA", "TCACTG"} //array solicitado en el ejemplo.
-	// isMutand(dna)
-	fmt.Println()
-	if response {
+
+	isMutant := L.IsMutand(t.Test)
+	if isMutant == "true" {
 		w.WriteHeader(200)
 		w.Write([]byte("Mutant found"))
-	} else {
+	} else if isMutant == "false" {
 		w.WriteHeader(http.StatusForbidden)
 		w.Write([]byte("Humand found"))
+	} else {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(isMutant))
 	}
 }
 
