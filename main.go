@@ -4,43 +4,66 @@ package main
 //Prueba técnica Examen Mercadolibre
 import (
 	"encoding/json"
+	"log"
+	"net/http"
+	"strings"
+
 	D "github.com/diegoernesto899/Diego_Puentes_Prueba_Mercadolibre/Data"
 	L "github.com/diegoernesto899/Diego_Puentes_Prueba_Mercadolibre/pkg"
 	"github.com/gorilla/mux"
-	"log"
-	"net/http"
 )
 
 type jsonStruct struct {
-	Test [6]string `json:"dna"`
+	RequetADN [6]string `json:"dna"`
 }
 
 func mutant(w http.ResponseWriter, r *http.Request) {
-	D.TestCon()
 	decoder := json.NewDecoder(r.Body) //Obtener json param dna form r request
 	var t jsonStruct
 	err := decoder.Decode(&t) //mapear el parametro adn  al objeto jsonStruct
-	if err != nil {
-		panic(err)
-	}
+	D.ErrorCheck(err)
 
-	isMutant := L.IsMutand(t.Test)
+	adnString := strings.Join(t.RequetADN[:], ",")
+
+	isMutant := L.IsMutand(t.RequetADN)
 	if isMutant == "true" {
+		D.AddADNRegistration(true, adnString)
 		w.WriteHeader(200)
-		w.Write([]byte("Mutant found"))
+		_, e := w.Write([]byte("Mutant found"))
+		D.ErrorCheck(e)
 	} else if isMutant == "false" {
+		D.AddADNRegistration(false, adnString)
 		w.WriteHeader(http.StatusForbidden)
-		w.Write([]byte("Humand found"))
+		_, e := w.Write([]byte("Humand found"))
+		D.ErrorCheck(e)
 	} else {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(isMutant))
+		_, e := w.Write([]byte(isMutant))
+		D.ErrorCheck(e)
 	}
+}
+
+type Repond struct {
+	Count_mutant_dna int     `json:"count_mutant_dna"`
+	Count_human_dna  int     `json:"count_human_dna"`
+	Ratio            float64 `json:"ratio"`
+}
+
+var Response Repond
+
+func stats(w http.ResponseWriter, _ *http.Request) {
+	mutan, human, ratio := D.GetRegistrationCount()
+	Response = Repond{Count_mutant_dna: mutan, Count_human_dna: human, Ratio: ratio}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	err := json.NewEncoder(w).Encode(Response)
+	D.ErrorCheck(err)
 }
 
 func request() {
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/mutant", mutant).Methods("POST")
-	myRouter.HandleFunc("/stats", mutant).Methods("GET")
+	myRouter.HandleFunc("/stats", stats).Methods("GET")
 	log.Fatal(http.ListenAndServe(":8081", myRouter))
 }
 func main() {
