@@ -2,7 +2,7 @@ package Data
 
 import (
 	"database/sql"
-	"fmt"
+	"log"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -28,23 +28,36 @@ type Record struct {
 //Funcion para insertar registro en la tabla TB_VerificacionADN
 func GetRegistrationCount() (mutant_dna int, human_dna int, ratio float64) {
 	db := obtenerBaseDeDatos()
+	//Obtener mutantes y humanos from db
 	res, err := db.Query("select sum(case when isMutant_dna = '1' then 1 else 0 end) as mutant_dna, sum(case when isMutant_dna = '0' then 1 else 0 end) as human_dna  from TB_VerificacionADN")
 	ErrorCheck(err)
 	defer res.Close()
+
 	var obj Record
+
 	if res.Next() {
-		err := res.Scan(&obj.count_mutant_dna, &obj.count_human_dna)
-		if obj.count_human_dna != 0 {
-			obj.ratio = float64(obj.count_mutant_dna) / float64(obj.count_human_dna)
-		} else {
-			obj.ratio = float64(obj.count_mutant_dna)
-		}
+		err := res.Scan(&obj.count_mutant_dna, &obj.count_human_dna)    //mapear resultado de db en objeto Record
+		obj.ratio = CalRatio(obj.count_human_dna, obj.count_mutant_dna) //calcular ratio
 		ErrorCheck(err)
 	} else {
-		fmt.Println("fallo consulta")
+		log.Println("fallo consulta")
 	}
 
 	return obj.count_mutant_dna, obj.count_human_dna, obj.ratio
+}
+
+// Esta funcion calcula el ratio entre 2 numeros
+func CalRatio(h int, m int) float64 {
+
+	var ratio float64
+	if h != 0 && m != 0 {
+		ratio = (float64(m) / float64(h))
+	} else if h != 0 && m == 0 {
+		ratio = float64(h)
+	} else if h == 0 && m != 0 {
+		ratio = float64(m)
+	}
+	return ratio
 }
 
 //funcion para capturar error y mostrar panic error

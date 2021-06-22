@@ -21,7 +21,6 @@ import (
 func IsMutand(dna [6]string) string {
 
 	if !validRequest(dna) {
-		// fmt.Fprintf("")
 		return "La cadena de ADN contiene valores no validos"
 	}
 
