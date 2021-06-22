@@ -37,7 +37,7 @@ func GetRegistrationCount() (mutant_dna int, human_dna int, ratio float64) {
 
 	if res.Next() {
 		err := res.Scan(&obj.count_mutant_dna, &obj.count_human_dna)    //mapear resultado de db en objeto Record
-		obj.ratio = CalRatio(obj.count_human_dna, obj.count_mutant_dna) //calcular ratio
+		obj.ratio = CalRatio(obj.count_mutant_dna, obj.count_human_dna) //calcular ratio
 		ErrorCheck(err)
 	} else {
 		log.Println("fallo consulta")
@@ -47,7 +47,7 @@ func GetRegistrationCount() (mutant_dna int, human_dna int, ratio float64) {
 }
 
 // Esta funcion calcula el ratio entre 2 numeros
-func CalRatio(h int, m int) float64 {
+func CalRatio(m int, h int) float64 {
 
 	var ratio float64
 	if h != 0 && m != 0 {

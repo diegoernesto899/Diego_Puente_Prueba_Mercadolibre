@@ -4,7 +4,6 @@ package main
 //Prueba técnica Examen Mercadolibre
 //goos=linux go build -o main main.go
 import (
-	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -31,7 +30,7 @@ var Stats ResponseStats
 func returnMutantHttp(respuestaString string, code int) events.APIGatewayProxyResponse {
 	return events.APIGatewayProxyResponse{
 		Body:       string(respuestaString),
-		StatusCode: http.StatusBadRequest,
+		StatusCode: code,
 	}
 }
 
@@ -67,7 +66,7 @@ func stats() events.APIGatewayProxyResponse {
 }
 
 //Controlador que captura el formato http y asigna los submetodos
-func Handler(c context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+func Handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	log.Println(request)
 	log.Println("PathResult" + request.Path)
 
